@@ -1,0 +1,27 @@
+{
+  "name": "multi-window-tutorial",
+  "version": "1.0.0",
+  "description": "Source code of Multi Window Tutorial",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "tutorial",
+    "js",
+    "ts",
+    "multi-window",
+    "state"
+  ],
+  "author": "Achraf Laamoum",
+  "license": "ISC",
+  "dependencies": {
+    "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "@types/sharedworker": "^0.0.109",
+    "vite": "^5.0.7"
+  }
+}
