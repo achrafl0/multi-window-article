@@ -29,14 +29,17 @@ const baseChange = ({
   return currentWindowCoordinate;
 };
 
-const drawMainCircle = (ctx: CanvasRenderingContext2D, center: Coordinates) => {
+const drawMainCircle = (
+  ctx: CanvasRenderingContext2D | null,
+  center: Coordinates
+) => {
   const { x, y } = center;
-  ctx.strokeStyle = "#eeeeee";
-  ctx.lineWidth = 10;
-  ctx.beginPath();
-  ctx.arc(x, y, 100, 0, Math.PI * 2, false);
-  ctx.stroke();
-  ctx.closePath();
+  ctx!.strokeStyle = "#eeeeee";
+  ctx!.lineWidth = 10;
+  ctx!.beginPath();
+  ctx!.arc(x, y, 100, 0, Math.PI * 2, false);
+  ctx!.stroke();
+  ctx!.closePath();
 };
 
 const drawConnectingLine = ({
@@ -44,12 +47,12 @@ const drawConnectingLine = ({
   hostWindow,
   targetWindow,
 }: {
-  ctx: CanvasRenderingContext2D;
+  ctx: CanvasRenderingContext2D | null;
   hostWindow: WindowState;
   targetWindow: WindowState;
 }) => {
-  ctx.strokeStyle = "#ff0000";
-  ctx.lineCap = "round";
+  ctx!.strokeStyle = "#ff0000";
+  ctx!.lineCap = "round";
   const currentWindowOffset: Coordinates = {
     x: hostWindow.screenX,
     y: hostWindow.screenY,
@@ -67,32 +70,36 @@ const drawConnectingLine = ({
     targetPosition: target,
   });
 
-  ctx.strokeStyle = "#ff0000";
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(origin.x, origin.y);
-  ctx.lineTo(targetWithBaseChange.x, targetWithBaseChange.y);
-  ctx.stroke();
-  ctx.closePath();
+  ctx!.strokeStyle = "#ff0000";
+  ctx!.lineCap = "round";
+  ctx!.beginPath();
+  ctx!.moveTo(origin.x, origin.y);
+  ctx!.lineTo(targetWithBaseChange.x, targetWithBaseChange.y);
+  ctx!.stroke();
+  ctx!.closePath();
 };
 
 function main() {
   const workerHandler = new WindowWorkerHandler();
   const canvas = document.querySelector<HTMLCanvasElement>("#canvas")!;
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  if (!canvas) {
+    console.error("Canvas element not found");
+    return;
+  }
   const ctx = canvas.getContext("2d");
   if (!ctx) {
     return;
   }
-  const currentWindow = workerHandler.currentWindow;
-  const currentId = workerHandler.id;
-  const center = getWindowCenter(currentWindow);
-
-  workerHandler.onSync((windows) => {
-    ctx.reset();
+  // Function to update canvas size and redraw
+  function updateCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const currentWindow = workerHandler.currentWindow;
+    const currentId = workerHandler.id;
+    const center = getWindowCenter(currentWindow);
+    ctx?.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
     drawMainCircle(ctx, center);
-    windows
+    workerHandler.windows
       .filter((w) => w.id !== currentId)
       .forEach(({ windowState: targetWindow }) => {
         drawConnectingLine({
@@ -101,6 +108,12 @@ function main() {
           targetWindow,
         });
       });
+  }
+  updateCanvas();
+  window.addEventListener("resize", updateCanvas);
+
+  workerHandler.onSync((windows) => {
+    updateCanvas();
   });
 
   setInterval(() => {
